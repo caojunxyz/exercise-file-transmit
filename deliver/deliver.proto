@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package deliver;
+
+service Deliver {
+    rpc InitSession (Session) returns (Null) {}
+    rpc NotifyBlockFlag (BlockFlag) returns (Null) {}
+    rpc PushBlock (Block) returns (Null) {}
+    rpc PullBlock (BlockFlag) returns (Block) {}
+    rpc CheckProgress (Progress) returns (Progress) {}
+}
+
+message Null {
+}
+
+enum NodeType {
+   MASTER = 0;
+   LEADER = 1;
+   NORMAL = 2;
+}
+
+message Session {
+    int64 session_id = 1;
+    Artifact artifact = 2;
+    int64 node_id = 3;
+    Group group = 4;
+    repeated Node leaders = 5;
+}
+
+message Node {
+    int64 id = 1; // node id
+    NodeType type = 2; // node type
+    string addr = 3;
+}
+
+message Group {
+    int64 id = 1; // group id
+    int64 leader_id = 2; // leader id
+    repeated Node nodes = 3; // nodes, first node is leader node
+}
+
+message Artifact {
+    string filename = 1;
+    int64 size = 2;
+    string sha1 = 3;
+    int64 block_size = 4;
+    int64 block_num = 5;
+}
+
+message Block {
+    int64 id = 1;
+    int64 size = 2;
+    string sha1 = 3;
+    bytes raw = 4;
+    repeated int64 pulled_from = 5; // if the block is pulled from another node (A), fill with the A's id
+}
+
+message BlockFlag {
+    int64 block_id = 1;
+    Node node = 2;
+}
+
+message BlockAssembled {
+    int64 id = 1;
+    repeated int64 pulled_from = 2; // if the block is pulled from another node (A), fill with the A's id
+}
+
+message Progress {
+    int64 session_id = 1;
+    map<int64, int64> assembled_blocks = 2; // key: node id, value: assembled block num
+}
